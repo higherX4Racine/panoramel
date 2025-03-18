@@ -6,12 +6,13 @@ from panoramel.schema.school import School
 
 
 def test_blank_school(mock_uuid):
-    should_be = escape(r"School.__init__() missing 1 required positional argument: 'name'")
+    should_be = escape(r"School.__init__() missing 2 required positional arguments: 'full_name' and 'nick_name'")
     with pytest.raises(TypeError, match=should_be):
         School()
 
 
 def test_named_school(mock_uuid):
-    school = School("Wayside School")
+    school = School("Wayside School", "Wayz")
     assert school.school_id == 1
-    assert school.name == "Wayside School"
+    assert school.full_name == "Wayside School"
+    assert school.nick_name == "Wayz"
