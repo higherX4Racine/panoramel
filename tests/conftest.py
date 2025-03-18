@@ -1,11 +1,11 @@
 import pytest
 
-from panoramel import primary_key
+from panoramel import utilities
 
 
 @pytest.fixture(scope="package")
 def pk_module():
-    return primary_key
+    return utilities
 
 
 @pytest.fixture(scope="function")

@@ -1,6 +1,6 @@
 # Copyright (C) 2025 by Higher Expectations for Racine County
 
-from panoramel.primary_key import create_key
+from panoramel.utilities import create_key
 
 
 def test_mock_key(mock_uuid):
