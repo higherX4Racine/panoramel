@@ -1,13 +1,12 @@
-# Copyright (C) 2025 by Higher Expectations for Racine County
-
-from dataclasses import dataclass
+#  Copyright (C) 2025 by Higher Expectations for Racine County
+from dataclasses import dataclass, field
 from datetime import datetime
 
-from .keyed_item import KeyedItem
+from ..keys import UniqueKey
 
 
 @dataclass
-class Source(KeyedItem):
+class Source:
     r"""A description of a downloaded file or fetched blob with Panorama data
 
     As of 2025, data must be downloaded from Panorama in one CSV sheet per
@@ -20,17 +19,12 @@ class Source(KeyedItem):
         identifying information about the source, like its file name.
     date: datetime
         a timestamp of when the data were pulled from Panorama
-    school_id: int
+    school_id: bytes
         foreign key to the school that the source describes
-
-    Attributes
-    ----------
-    source_id : int
+    source_id : UniqueKey
         The primary key for this item.
-    key_name: str
-        "source_id"
     """
-    key_name = "source_id"
     description: str
     date: datetime
-    school_id: int
+    school_id: bytes
+    source_id: UniqueKey = field(default_factory=UniqueKey.new)

@@ -1,8 +1,8 @@
-# Copyright (C) 2025 by Higher Expectations for Racine County
+#  Copyright (C) 2025 by Higher Expectations for Racine County
 
 import pytest
 
-from panoramel.schema import keyed_item
+from panoramel.schema.keys import unique
 
 
 @pytest.fixture(scope="function")
@@ -15,6 +15,10 @@ def mock_uuid(monkeypatch):
             MockUUID.count += 1
             return MockUUID.count
 
-    monkeypatch.setattr(keyed_item,
+        @property
+        def bytes(self) -> bytes:
+            return b"%d" % self.int
+
+    monkeypatch.setattr(unique,
                         "uuid4",
                         MockUUID)

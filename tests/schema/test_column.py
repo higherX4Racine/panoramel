@@ -1,14 +1,14 @@
 # Copyright (C) 2025 by Higher Expectations for Racine County
 
-from panoramel.schema.column import Column
+from panoramel.schema.models import Column
 
 
-def test_column(mock_uuid):
-    column = Column(42, 0, int, 99, str)
+def test_column():
+    column = Column(int, b"99", str, b'42', 42)
 
-    assert column.column_id == 1
-    assert column.source_id == 42
-    assert column.index == 0
+    assert column.column_id == b'42\x00\x00\x00*'
+    assert column.source_id == b'42'
+    assert column.index == 42
     assert column.context_type == int
-    assert column.context_id == 99
+    assert column.context_id == b'99'
     assert column.measure_type == str

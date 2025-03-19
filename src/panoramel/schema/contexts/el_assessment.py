@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 
-from ..context import Context
+from ..models import Context
 
 
 @dataclass
@@ -19,9 +19,6 @@ class ELAssessment(Context):
         the four-digit calendar year that the assessment was done in.
     unit: str
         either "Status" or "Value" for an achievement level or raw score.
-
-    Attributes
-    ----------
     context_id: int
         The primary key for this item.
     """

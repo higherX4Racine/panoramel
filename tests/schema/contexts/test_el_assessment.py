@@ -16,9 +16,11 @@ def test_el_assessment_context(mock_uuid, unit, datatype):
                                   1999,
                                   unit)
 
-    assert context.context_id == 1
-    assert astuple(context) == ("some reading test",
+    assert context.context_id == b"1"
+    assert astuple(context) == (b"1",
+                                "some reading test",
                                 "Marzo",
                                 1999,
-                                unit)
+                                unit,
+                                )
     assert context.output_type == datatype

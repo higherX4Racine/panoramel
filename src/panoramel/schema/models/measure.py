@@ -1,17 +1,18 @@
-# Copyright (C) 2025 by Higher Expectations for Racine County
+#  Copyright (C) 2025 by Higher Expectations for Racine County
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field, InitVar
 from typing import Self
-from .keyed_item import KeyedItem
+
+from ..keys import CompositeKey
 
 
 @dataclass
-class Measure[T](KeyedItem):
+class Measure[T]:
     r"""A single typed observation from a parsed table.
 
     Parameters
     ----------
-    column_id: int
+    column_id: bytes
         A foreign key to the `Column` object that describes this object's context
     row: int
         The zero-indexed row number whence this observation came
@@ -20,20 +21,28 @@ class Measure[T](KeyedItem):
 
     Attributes
     ----------
-    measure_id: int
-        The primary key of this item
-    key_name: str
-        "measure_id"
+    measure_id: CompositeKey
+        The primary key of this item, concatenating `column_id` and `row`
 
     See Also
     --------
     Column
-    KeyedItem
     """
-    key_name = "measure_id"
-    column_id: int
-    row: int
     value: T
+    column_id: InitVar[bytes]
+    row: InitVar[int]
+    measure_id: CompositeKey = field(init=False)
+
+    def __post_init__(self, column_id: bytes, row: int):
+        self.measure_id = CompositeKey(column_id, row)
+
+    @property
+    def column_id(self) -> bytes:
+        return self.measure_id.unique_id
+
+    @property
+    def row(self) -> int:
+        return self.measure_id.index
 
     def __eq__(self, other):
         return self.value == other.value
