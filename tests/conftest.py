@@ -2,7 +2,7 @@
 
 import pytest
 
-from panoramel.schema.keys import unique
+from smelt_py.database.keys import unique
 
 
 @pytest.fixture(scope="function")

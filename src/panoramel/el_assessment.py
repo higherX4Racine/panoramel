@@ -1,12 +1,11 @@
-# Copyright (C) 2025 by Higher Expectations for Racine County
+#  Copyright (C) 2025 by Higher Expectations for Racine County
 
 from dataclasses import dataclass
 
-from ..models import Context
-
+from .status_value_unit_lookup import StatusValueUnit
 
 @dataclass
-class ELAssessment(Context):
+class ElAssessment(StatusValueUnit):
     r"""One specific early literacy assessment
 
     Parameters
@@ -26,12 +25,3 @@ class ELAssessment(Context):
     month: str
     year: int
     unit: str
-
-    _mapping = {
-        "Status": str,
-        "Value": float
-    }
-    @property
-    def output_type(self) -> type:
-        return self._mapping[self.unit]
-

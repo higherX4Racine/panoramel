@@ -3,7 +3,7 @@
 from dataclasses import astuple
 import pytest
 
-from panoramel.schema.contexts import ELAssessmentContext
+from panoramel import ElAssessmentContext
 
 
 @pytest.mark.parametrize("unit,datatype", [
@@ -11,7 +11,7 @@ from panoramel.schema.contexts import ELAssessmentContext
     ("Value", float)
 ])
 def test_el_assessment_context(mock_uuid, unit, datatype):
-    context = ELAssessmentContext("some reading test",
+    context = ElAssessmentContext("some reading test",
                                   "Marzo",
                                   1999,
                                   unit)
@@ -23,4 +23,5 @@ def test_el_assessment_context(mock_uuid, unit, datatype):
                                 1999,
                                 unit,
                                 )
+    assert context.output_name == unit
     assert context.output_type == datatype
