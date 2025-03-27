@@ -1,6 +1,5 @@
 #  Copyright (C) 2025 by Higher Expectations for Racine County
 
-from dataclasses import astuple
 import pytest
 
 from panoramel import PearsonAimsContext
@@ -19,7 +18,7 @@ def test_pearson_aims_context(mock_uuid, unit, datatype):
     )
 
     assert context.context_id == b"1"
-    assert astuple(context) == (
+    assert context.as_tuple() == (
         b"1",
         "One of the 3 'R's",
         "k-12",

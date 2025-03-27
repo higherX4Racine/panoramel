@@ -1,6 +1,5 @@
 #  Copyright (C) 2025 by Higher Expectations for Racine County
 
-from dataclasses import astuple
 from datetime import date
 import pytest
 
@@ -19,6 +18,6 @@ def test_student_context(mock_uuid, field, datatype):
     context = StudentContext(field)
 
     assert context.context_id == b"1"
-    assert astuple(context) == (b"1", field)
+    assert context.as_tuple() == (b"1", field)
     assert context.output_name == field
     assert context.output_type == datatype
