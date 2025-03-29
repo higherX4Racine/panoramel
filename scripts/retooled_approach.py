@@ -1,16 +1,15 @@
 #  Copyright (C) 2025 by Higher Expectations for Racine County
 
 from glob import glob
-from importlib.resources import files
-from json import load as json_load
+# from importlib.resources import files
+# from json import load as json_load
 import os
+from typing import Any
 
 import polars
 from polars import (
     col,
-    lit,
     scan_csv,
-    Expr,
     DataFrame,
     selectors as cs,
 )
@@ -33,7 +32,7 @@ from panoramel import (
 )
 
 from smelt_py.database.models import Context, Column
-from smelt_py.database.models.base import Base as BaseModel
+from smelt_py.polars import as_filter_expressions, as_row
 
 DATA_DIR = os.path.join(os.path.expanduser("~"),
                         "Documents",
@@ -51,37 +50,26 @@ INPUT_FILES = glob(os.path.join(PANORAMA_DOWNLOAD_DIR, "*.csv"))
 OUTPUT_DIR = os.path.join(DATA_DIR, "Iterations", "Panoramel")
 
 
-def find_or_append(context_frame: DataFrame,
-                   context: Context,
-                   fields: list[str] = None) -> DataFrame:
-    expr = as_filter_expressions(context, fields)
+# THIS NEEDS TO CHANGE BECAUSE I AM NOT CORRECTLY USING THE EXTRACTED UNIQUE IDENTIFIERS
+def find_or_append(context_label: str,
+                   context_frame: DataFrame,
+                   typed_captures: dict[str, Any],
+                   fields: list[str] = None) -> Context:
+    expr = as_filter_expressions(typed_captures, fields)
     row = context_frame.filter(*expr)
+    if row.height > 0:
+        typed_captures = row.row(0, named=True)
+    context = PANORAMA_CONTEXTS[context_label](**typed_captures)
     if row.height == 0:
         row = as_row(context, context_frame)
         context_frame.vstack(row, in_place=True)
-    return row
+    return context
 
 
-def as_filter_expressions(model_item: BaseModel,
-                          fields: list[str] = None) -> list[Expr]:
-    if fields is None:
-        fields = model_item.field_names()[1:]
-    fields = [(n, getattr(model_item, n)) for n in fields]
-    return [col(n) == lit(v) for n, v in fields]
-
-
-def as_row(model_item: BaseModel, template_frame: DataFrame) -> DataFrame:
-    return DataFrame([model_item.as_tuple()],
-                     schema=template_frame.schema,
-                     orient="row")
-
-
-def text_to_context(text: str, context_label: str) -> Context | None:
+def parse(text: str, context_label: str) -> dict[str, Any] | None:
     captures = PANORAMA_PATTERNS[context_label].extract(text)
     if captures:
-        return PANORAMA_CONTEXTS[context_label](
-            **PANORAMA_TYPE_MAPS[context_label].typed_captures(captures)
-        )
+        return PANORAMA_TYPE_MAPS[context_label].typed_captures(captures)
     return None
 
 
@@ -120,40 +108,37 @@ CONTEXT_FRAMES = {
     for k, schema in PANORAMA_SCHEMAS.items()
 }
 
-with files("panoramel").joinpath("data", "schools.json").open() as fh:
-    for pair in json_load(fh):
-        school_context = PANORAMA_CONTEXTS["school"](*pair)
-        CONTEXT_FRAMES["school"].vstack(
-            DataFrame([school_context.as_tuple()],
-                      schema=CONTEXT_FRAMES["school"].schema,
-                      orient="row"),
-            in_place=True
-        )
+# with files("panoramel").joinpath("data", "schools.json").open() as fh:
+#     for pair in json_load(fh):
+#         school_context = PANORAMA_CONTEXTS["school"](*pair)
+#         CONTEXT_FRAMES["school"].vstack(
+#             DataFrame([school_context.as_tuple()],
+#                       schema=CONTEXT_FRAMES["school"].schema,
+#                       orient="row"),
+#             in_place=True
+#         )
 
 for fn in INPUT_FILES:
-    source_context = text_to_context(os.path.basename(fn), "source")
-    find_or_append(CONTEXT_FRAMES["source"], source_context)
-    school_row = find_or_append(CONTEXT_FRAMES["school"],
-                                source_context,
-                                ["full_name"])
+    source_context = find_or_append("source",
+                                    CONTEXT_FRAMES["source"],
+                                    parse(os.path.basename(fn), "source"))
     column_names = scan_csv(fn).collect_schema().names()
+    columns = []
     for col_index, col_name in enumerate(column_names):
         for heading_key in HEADING_KEYS:
-            heading_context = text_to_context(col_name, heading_key)
-            if heading_context is not None:
-                context_row = find_or_append(CONTEXT_FRAMES[heading_key],
-                                             heading_context)
+            heading_captures = parse(col_name, heading_key)
+            if heading_captures is not None:
+                heading_context = find_or_append(heading_key,
+                                                 CONTEXT_FRAMES[heading_key],
+                                                 heading_captures)
                 column = Column(source_context.context_id, col_index,
                                 heading_key, heading_context.context_id,
                                 heading_context.output_type)
+                columns.append(column)
                 COLUMN_FRAME.vstack(as_row(column, COLUMN_FRAME), in_place=True)
 
-    columns = [
-        Column(*r) for
-        r in
-        COLUMN_FRAME.filter(col("source_id") == source_context.context_id).iter_rows()
-    ]
     schema = {c.column_id.hex(): c.measure_type for c in columns}
+    del columns
     local = (polars
              .read_csv(fn,
                        has_header=False,
@@ -173,7 +158,7 @@ for fn in INPUT_FILES:
         )
 
 
-def safely_print_binaries(_frame, _path):
+def safely_print_binaries(_frame: DataFrame, _path: str):
     (_frame
     .with_columns(
         col(Binary).bin.encode("hex")
