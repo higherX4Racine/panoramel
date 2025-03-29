@@ -4,7 +4,6 @@ from smelt_py.matching import (Element, Pattern)
 from smelt_py.parsing import Converter, MonthConverter, TypeMap
 
 from .status_value_unit_lookup import StatusValueUnit
-from .utilities import schema_to_type_map
 
 
 class ElAssessment(StatusValueUnit):

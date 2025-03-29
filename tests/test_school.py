@@ -4,6 +4,7 @@ from importlib.resources import files
 from json import load as json_load
 
 import pytest
+from polars import String
 
 from panoramel import SchoolContext
 
@@ -18,4 +19,4 @@ def test_school_context(school):
     assert context.context_id == b"1"
     assert context.as_tuple() == (b"1", school[0], school[1])
     assert context.output_name == "School"
-    assert context.output_type == str
+    assert context.output_type == String

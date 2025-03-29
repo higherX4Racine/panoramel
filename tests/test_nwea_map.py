@@ -1,6 +1,7 @@
 #  Copyright (C) 2025 by Higher Expectations for Racine County
 
 import pytest
+from polars import String, Float64
 from smelt_py.matching import Capture
 
 from panoramel import NweaMapContext
@@ -8,8 +9,8 @@ from panoramel.contexts.nwea_map import PATTERN, TYPE_MAP
 
 
 @pytest.mark.parametrize("unit,datatype", [
-    ("Status", str),
-    ("Value", float)
+    ("Status", String),
+    ("Value", Float64)
 ])
 def test_nwea_map_context(mock_uuid, unit, datatype):
     context = NweaMapContext(
@@ -86,7 +87,7 @@ def test_problematic_nwea_map_headings(heading, mock_uuid):
                                  "Status",)
 
     assert context.output_name == "Status"
-    assert context.output_type == str
+    assert context.output_type == String
 
 
 def test_nwea_map_type_map():

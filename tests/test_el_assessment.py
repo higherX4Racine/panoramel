@@ -1,13 +1,13 @@
 #  Copyright (C) 2025 by Higher Expectations for Racine County
 
 import pytest
-
+from polars import String, Float64
 from panoramel import ElAssessmentContext
 
 
 @pytest.mark.parametrize("unit,datatype", [
-    ("Status", str),
-    ("Value", float)
+    ("Status", String),
+    ("Value", Float64)
 ])
 def test_el_assessment_context(unit, datatype):
     context = ElAssessmentContext("some reading test",

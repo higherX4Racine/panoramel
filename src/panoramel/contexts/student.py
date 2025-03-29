@@ -1,8 +1,6 @@
 #  Copyright (C) 2025 by Higher Expectations for Racine County
 
-from datetime import date
-
-from polars import Schema, String, Binary
+from polars import Schema, String, Binary, Datetime, UInt64
 
 from smelt_py.database.models.contexts import LookupContext
 from smelt_py.matching import (Element, Pattern)
@@ -22,12 +20,12 @@ class Student(LookupContext):
     _field_names = ["field"]
     _name_field = "field"
     _mapping = {
-        "Date of Birth": date,
-        "Gender": str,
-        "Grade Level": str,
-        "First Name": str,
-        "Last Name": str,
-        "Student Number": int
+        "Date of Birth": Datetime(),
+        "Gender": String,
+        "Grade Level": String,
+        "First Name": String,
+        "Last Name": String,
+        "Student Number": UInt64
     }
 
     def __init__(self, field: str, *args, **kwargs):

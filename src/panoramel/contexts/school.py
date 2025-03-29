@@ -18,7 +18,7 @@ class School(LiteralContext):
     """
     _field_names = ["full_name", "nick_name"]
     _name_field = "School"
-    _data_type = str
+    _data_type = String
 
     def __init__(self,
                  full_name: str,

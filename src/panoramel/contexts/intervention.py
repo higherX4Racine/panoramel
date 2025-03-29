@@ -1,8 +1,6 @@
 #  Copyright (C) 2025 by Higher Expectations for Racine County
 
-from datetime import date
-
-from polars import Schema, Int8, String, Binary
+from polars import Schema, Int8, String, Binary, Datetime
 
 from smelt_py.database.models.contexts import LookupContext
 from smelt_py.matching import (Element, Pattern)
@@ -26,10 +24,10 @@ class Intervention(LookupContext):
     _field_names = ["number", "detail"]
     _name_field = "detail"
     _mapping = {
-        "Status": str,
-        "Start Date": date,
-        "Type and Strategy": str,
-        "Tier": str
+        "Status": String,
+        "Start Date": String,
+        "Type and Strategy": String,
+        "Tier": String
     }
 
     def __init__(self, number: int, detail: str, *args, **kwargs):

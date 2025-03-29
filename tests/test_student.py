@@ -1,18 +1,18 @@
 #  Copyright (C) 2025 by Higher Expectations for Racine County
 
-from datetime import date
 import pytest
+from polars import Datetime, String, UInt64
 
 from panoramel import StudentContext
 
 
 @pytest.mark.parametrize("field,datatype", [
-    ("Date of Birth", date),
-    ("Gender", str),
-    ("Grade Level", str),
-    ("First Name", str),
-    ("Last Name", str),
-    ("Student Number", int)
+    ("Date of Birth", Datetime()),
+    ("Gender", String),
+    ("Grade Level", String),
+    ("First Name", String),
+    ("Last Name", String),
+    ("Student Number", UInt64)
 ])
 def test_student_context(mock_uuid, field, datatype):
     context = StudentContext(field)

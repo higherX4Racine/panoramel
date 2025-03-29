@@ -1,5 +1,6 @@
 #  Copyright (C) 2025 by Higher Expectations for Racine County
 
+from polars import Float64, String
 from smelt_py.database.models.contexts import LookupContext
 
 
@@ -13,9 +14,9 @@ class StatusValueUnit(LookupContext):
         """
     _name_field = "unit"
     _mapping = {
-        "Most Recent Result": float,
-        "Status": str,
-        "Value": float
+        "Most Recent Result": Float64,
+        "Status": String,
+        "Value": Float64
     }
 
     def __init__(self, unit: str, *args, **kwargs):

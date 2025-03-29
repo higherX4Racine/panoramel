@@ -1,6 +1,6 @@
 #  Copyright (C) 2025 by Higher Expectations for Racine County
 
-from polars import Schema, String, Binary
+from polars import Schema, String, Binary, Int8
 
 from smelt_py.database.models.contexts import LiteralContext
 from smelt_py.matching import (Element, Pattern)
@@ -18,7 +18,7 @@ class InterventionCount(LiteralContext):
     """
     _field_names = ["interventions"]
     _name_field = "Number of Interventions"
-    _data_type = int
+    _data_type = Int8
 
     def __init__(self, interventions: int, *args, **kwargs):
         super().__init__(*args, **kwargs)

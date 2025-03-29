@@ -3,15 +3,16 @@
 from datetime import date
 
 import pytest
+from polars import String, Datetime
 
 from panoramel import InterventionContext
 
 
 @pytest.mark.parametrize("detail,datatype", [
-    ("Status", str),
-    ("Start Date", date),
-    ("Type and Strategy", str),
-    ("Tier", str)
+    ("Status", String),
+    ("Start Date", String),
+    ("Type and Strategy", String),
+    ("Tier", String)
 ])
 def test_intervention_context(mock_uuid, detail, datatype):
     context = InterventionContext(42, detail)

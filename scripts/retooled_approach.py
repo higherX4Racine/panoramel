@@ -5,8 +5,26 @@ from importlib.resources import files
 from json import load as json_load
 import os
 
-from polars import scan_csv, DataFrame, col, lit, Expr, Binary, Int64, String, Float64, Datetime
-
+import polars
+from polars import (
+    col,
+    lit,
+    scan_csv,
+    Expr,
+    DataFrame,
+    selectors as cs,
+)
+from polars import (
+    Binary,
+    Datetime,
+    Float64,
+    Int8,
+    Int64,
+    Object,
+    String,
+    UInt32,
+    UInt64
+)
 from panoramel import (
     PANORAMA_CONTEXTS,
     PANORAMA_PATTERNS,
@@ -66,17 +84,21 @@ def text_to_context(text: str, context_label: str) -> Context | None:
         )
     return None
 
+
 MEASURE_FRAMES = {
-    key: DataFrame(schema={
-        'measure_id': Binary,
+    data_type: DataFrame(schema={
         'column_id': Binary,
-        'row': Int64,
+        'row': UInt32,
         'value': data_type
-    }) for key, data_type in [
-        ("<class 'str'>", String),
-        ("<class 'int'>", Int64),
-        ("<class 'float'>", Float64),
-        ("<class 'datetime.date'>", Datetime),
+    }) for data_type in [
+        Binary,
+        Datetime(),
+        Float64,
+        Int8,
+        Int64,
+        String,
+        UInt32,
+        UInt64,
     ]
 }
 
@@ -85,7 +107,7 @@ COLUMN_FRAME = DataFrame(schema={
     'index': Int64,
     'context_type': String,
     'context_id': Binary,
-    'measure_type': String
+    'measure_type': Object
 })
 
 HEADING_KEYS = (
@@ -123,16 +145,40 @@ for fn in INPUT_FILES:
                                              heading_context)
                 column = Column(source_context.context_id, col_index,
                                 heading_key, heading_context.context_id,
-                                repr(heading_context.output_type))
+                                heading_context.output_type)
                 COLUMN_FRAME.vstack(as_row(column, COLUMN_FRAME), in_place=True)
 
+    columns = [
+        Column(*r) for
+        r in
+        COLUMN_FRAME.filter(col("source_id") == source_context.context_id).iter_rows()
+    ]
+    schema = {c.column_id.hex(): c.measure_type for c in columns}
+    local = (polars
+             .read_csv(fn,
+                       has_header=False,
+                       new_columns=schema.keys(),
+                       schema=schema,
+                       skip_rows=1,
+                       )
+             .with_row_index("row", offset=1))
+    for data_type, data_frame in MEASURE_FRAMES.items():
+        data_frame.vstack(
+            local
+            .select(cs.by_name("row") | cs.by_dtype(data_type))
+            .unpivot(index="row", variable_name="column_id", value_name="value")
+            .with_columns(col("column_id").str.decode("hex"))
+            .select("column_id", "row", "value"),
+            in_place=True
+        )
 
-def safely_print_binaries(frame, path):
-    (frame
+
+def safely_print_binaries(_frame, _path):
+    (_frame
     .with_columns(
         col(Binary).bin.encode("hex")
     ).write_csv(
-        path
+        _path
     ))
 
 
@@ -140,5 +186,13 @@ for label, frame in CONTEXT_FRAMES.items():
     safely_print_binaries(frame,
                           os.path.join(OUTPUT_DIR, f'{label}.csv'))
 
-safely_print_binaries(COLUMN_FRAME,
+safely_print_binaries(COLUMN_FRAME
+                      .with_columns(col(Object)
+                                    .map_elements(repr, return_dtype=String)),
                       os.path.join(OUTPUT_DIR, 'columns.csv'))
+
+for data_type, data_frame in MEASURE_FRAMES.items():
+    if data_frame.height > 0:
+        basename = f"Measures of {repr(data_type)}.csv"
+        safely_print_binaries(data_frame.drop_nulls("value"),
+                              os.path.join(OUTPUT_DIR, basename))
