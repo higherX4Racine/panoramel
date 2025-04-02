@@ -2,7 +2,7 @@
 
 from polars import Schema, String, Binary
 
-from smelt_py.database.models.contexts import LiteralContext
+from smelt_py.models import LiteralContext
 
 from .utilities import schema_to_type_map
 

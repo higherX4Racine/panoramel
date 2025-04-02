@@ -2,8 +2,8 @@
 
 from polars import Schema, String, Binary, Int8
 
-from smelt_py.database.models.contexts import LiteralContext
-from smelt_py.matching import (Element, Pattern)
+from smelt_py.models import LiteralContext
+from smelt_py import (Element, Pattern)
 
 from panoramel.contexts.utilities import schema_to_type_map
 

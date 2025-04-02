@@ -1,7 +1,7 @@
 #  Copyright (C) 2025 by Higher Expectations for Racine County
 
 from polars import Schema
-from smelt_py.parsing import Converter, TypeMap
+from smelt_py import Converter, TypeMap
 
 
 def schema_to_type_map(schema: Schema):

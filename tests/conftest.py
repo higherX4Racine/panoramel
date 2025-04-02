@@ -2,7 +2,7 @@
 
 import pytest
 
-from smelt_py.database.keys import unique
+from smelt_py.keys import unique
 
 
 @pytest.fixture(scope="function")

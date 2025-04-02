@@ -1,7 +1,7 @@
 #  Copyright (C) 2025 by Higher Expectations for Racine County
 
 from polars import Schema, String, Binary
-from smelt_py.matching import (Element, Pattern)
+from smelt_py import (Element, Pattern)
 from .status_value_unit_lookup import StatusValueUnit
 from .utilities import schema_to_type_map
 

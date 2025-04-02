@@ -2,7 +2,7 @@
 
 import pytest
 from polars import String, Float64
-from smelt_py.matching import Capture
+from smelt_py import Capture
 
 from panoramel import NweaMapContext
 from panoramel.contexts.nwea_map import PATTERN, TYPE_MAP

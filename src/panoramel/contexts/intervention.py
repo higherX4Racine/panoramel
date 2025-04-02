@@ -2,8 +2,8 @@
 
 from polars import Schema, Int8, String, Binary, Datetime
 
-from smelt_py.database.models.contexts import LookupContext
-from smelt_py.matching import (Element, Pattern)
+from smelt_py.models import LookupContext
+from smelt_py import (Element, Pattern)
 
 from panoramel.contexts.utilities import schema_to_type_map
 

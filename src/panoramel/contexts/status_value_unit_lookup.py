@@ -1,7 +1,7 @@
 #  Copyright (C) 2025 by Higher Expectations for Racine County
 
 from polars import Float64, String
-from smelt_py.database.models.contexts import LookupContext
+from smelt_py.models import LookupContext
 
 
 class StatusValueUnit(LookupContext):

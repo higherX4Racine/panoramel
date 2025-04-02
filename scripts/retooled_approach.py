@@ -4,11 +4,12 @@ from glob import glob
 # from importlib.resources import files
 # from json import load as json_load
 import os
+import re
 from typing import Any
 
-import polars
 from polars import (
     col,
+    read_csv,
     scan_csv,
     DataFrame,
     selectors as cs,
@@ -24,14 +25,17 @@ from polars import (
     UInt32,
     UInt64
 )
+from polars.exceptions import ComputeError
+
 from panoramel import (
     PANORAMA_CONTEXTS,
     PANORAMA_PATTERNS,
     PANORAMA_SCHEMAS,
     PANORAMA_TYPE_MAPS
 )
+from xlsxwriter import Workbook
 
-from smelt_py.database.models import Context, Column
+from smelt_py.models import Context, Column
 from smelt_py.polars import as_filter_expressions, as_row
 
 DATA_DIR = os.path.join(os.path.expanduser("~"),
@@ -139,14 +143,17 @@ for fn in INPUT_FILES:
 
     schema = {c.column_id.hex(): c.measure_type for c in columns}
     del columns
-    local = (polars
-             .read_csv(fn,
-                       has_header=False,
-                       new_columns=schema.keys(),
-                       schema=schema,
-                       skip_rows=1,
-                       )
-             .with_row_index("row", offset=1))
+    try:
+        local = (read_csv(fn,
+                          has_header=False,
+                          new_columns=schema.keys(),
+                          schema=schema,
+                          skip_rows=1,
+                          )
+                 .with_row_index("row", offset=1))
+    except ComputeError as c_e:
+        print(fn)
+        raise c_e
     for data_type, data_frame in MEASURE_FRAMES.items():
         data_frame.vstack(
             local
@@ -158,26 +165,31 @@ for fn in INPUT_FILES:
         )
 
 
-def safely_print_binaries(_frame: DataFrame, _path: str):
-    (_frame
-    .with_columns(
+def bowdlerize_key(key: str) -> str:
+    intermediary = re.match(r"[\w\s]+", key)
+    if intermediary is not None:
+        return intermediary[0]
+    return key
+
+
+def sanitize_blobs(_frame: DataFrame) -> DataFrame:
+    return _frame.with_columns(
+        col(Object).map_elements(repr, return_dtype=String),
         col(Binary).bin.encode("hex")
-    ).write_csv(
-        _path
-    ))
+    )
 
 
-for label, frame in CONTEXT_FRAMES.items():
-    safely_print_binaries(frame,
-                          os.path.join(OUTPUT_DIR, f'{label}.csv'))
+def save_frame_as_sheet(_wb: Workbook, _label: str, _frame: DataFrame) -> None:
+    sanitize_blobs(_frame).write_excel(_wb,
+                                       _wb.add_worksheet(_label))
 
-safely_print_binaries(COLUMN_FRAME
-                      .with_columns(col(Object)
-                                    .map_elements(repr, return_dtype=String)),
-                      os.path.join(OUTPUT_DIR, 'columns.csv'))
 
-for data_type, data_frame in MEASURE_FRAMES.items():
-    if data_frame.height > 0:
-        basename = f"Measures of {repr(data_type)}.csv"
-        safely_print_binaries(data_frame.drop_nulls("value"),
-                              os.path.join(OUTPUT_DIR, basename))
+with Workbook(os.path.join(OUTPUT_DIR, "findings.xlsx")) as wb:
+    for label, frame in CONTEXT_FRAMES.items():
+        save_frame_as_sheet(wb, bowdlerize_key(label), frame)
+    save_frame_as_sheet(wb, "columns", COLUMN_FRAME)
+    for data_type, data_frame in MEASURE_FRAMES.items():
+        if data_frame.height > 0:
+            save_frame_as_sheet(wb,
+                                f"{bowdlerize_key(repr(data_type))}_measures",
+                                data_frame.drop_nulls("value"))
