@@ -54,26 +54,25 @@ INPUT_FILES = glob(os.path.join(PANORAMA_DOWNLOAD_DIR, "*.csv"))
 OUTPUT_DIR = os.path.join(DATA_DIR, "Iterations", "Panoramel")
 
 
-# THIS NEEDS TO CHANGE BECAUSE I AM NOT CORRECTLY USING THE EXTRACTED UNIQUE IDENTIFIERS
 def find_or_append(context_label: str,
                    context_frame: DataFrame,
                    typed_captures: dict[str, Any],
                    fields: list[str] = None) -> Context:
     expr = as_filter_expressions(typed_captures, fields)
-    row = context_frame.filter(*expr)
-    if row.height > 0:
-        typed_captures = row.row(0, named=True)
+    row_frame = context_frame.filter(*expr)
+    if row_frame.height > 0:
+        typed_captures = row_frame.row(0, named=True)
     context = PANORAMA_CONTEXTS[context_label](**typed_captures)
-    if row.height == 0:
-        row = as_row(context, context_frame)
-        context_frame.vstack(row, in_place=True)
+    if row_frame.height == 0:
+        row_frame = as_row(context, context_frame)
+        context_frame.vstack(row_frame, in_place=True)
     return context
 
 
 def parse(text: str, context_label: str) -> dict[str, Any] | None:
     captures = PANORAMA_PATTERNS[context_label].extract(text)
     if captures:
-        return PANORAMA_TYPE_MAPS[context_label].typed_captures(captures)
+        return PANORAMA_TYPE_MAPS[context_label].convert_captures(captures)
     return None
 
 

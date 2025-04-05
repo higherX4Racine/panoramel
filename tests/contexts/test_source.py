@@ -69,8 +69,8 @@ def test_source_context(text, school, timestamp):
     timestring = ''.join(f'{x:02}' for x in timestamp)
     assert captures[1].value == "20250211" + timestring
     context = SourceContext(
-        **PANORAMA_TYPE_MAPS["source"].typed_captures(captures),
-        context_id=b"1"
+        context_id=b"1",
+        **PANORAMA_TYPE_MAPS["source"].convert_captures(captures),
     )
     assert context.full_name == school
     assert context.date_stamp == datetime(2025, 2, 11, *timestamp)

@@ -15,7 +15,7 @@ from panoramel import InterventionContext
     ("Tier", String)
 ])
 def test_intervention_context(mock_uuid, detail, datatype):
-    context = InterventionContext(42, detail)
+    context = InterventionContext(number=42, detail=detail)
 
     assert context.context_id == b"1"
     assert context.as_tuple() == (b"1", 42, detail)

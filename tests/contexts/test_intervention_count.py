@@ -5,7 +5,7 @@ from panoramel import InterventionCountContext
 
 
 def test_el_intervention_count_context(mock_uuid):
-    context = InterventionCountContext(42)
+    context = InterventionCountContext(interventions=42)
 
     assert context.context_id == b"1"
     assert context.as_tuple() == (b"1", 42)

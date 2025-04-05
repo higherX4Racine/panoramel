@@ -1,23 +1,31 @@
 #  Copyright (C) 2025 by Higher Expectations for Racine County
+
+from dataclasses import dataclass
+
 from polars import (
     Binary,
     Int8,
     Int16,
+    Float64,
     Schema,
     String,
 )
-from smelt_py import (
-    Converter,
+
+from smelt_py.models import LookupContext
+from smelt_py.parsing import (
     Element,
-    MonthConverter,
+    Parser,
     Pattern,
     TypeMap,
 )
+from smelt_py.parsing.converters import (
+    BuiltInConverter,
+    MonthConverter,
+)
 
-from .status_value_unit_lookup import StatusValueUnit
 
-
-class ElAssessment(StatusValueUnit):
+@dataclass
+class ElAssessment(LookupContext):
     r"""One specific early literacy assessment
 
     Parameters
@@ -28,31 +36,19 @@ class ElAssessment(StatusValueUnit):
         some sloppy representation of the month, like "01" or "Octo."
     year: int
         the four-digit calendar year that the assessment was done in.
+    unit: str
+        either "Status" or "Value" for an achievement level or raw score.
     """
-    _field_names = ["assessment", "month", "year"]
-
-    def __init__(self,
-                 assessment: str,
-                 month: str,
-                 year: int,
-                 *args,
-                 **kwargs):
-        super().__init__(*args, **kwargs)
-        self._assessment = assessment
-        self._month = month
-        self._year = year
-
-    @property
-    def assessment(self) -> str:
-        return self._assessment
-
-    @property
-    def month(self) -> str:
-        return self._month
-
-    @property
-    def year(self) -> int:
-        return self._year
+    _name_field = "unit"
+    _mapping = {
+        "Most Recent Result": Float64,
+        "Status": String,
+        "Value": Float64
+    }
+    assessment: str = None
+    month: str = None
+    year: int = None
+    unit: str = None
 
 
 PATTERN = Pattern(
@@ -65,6 +61,15 @@ PATTERN = Pattern(
     r"[\s:]"
 )
 
+TYPE_MAP = TypeMap(
+    assessment=BuiltInConverter(str),
+    month=MonthConverter("en"),
+    year=BuiltInConverter(int),
+    unit=BuiltInConverter(str),
+)
+
+PARSER = Parser(TYPE_MAP, PATTERN)
+
 SCHEMA = Schema(dict(
     context_id=Binary,
     assessment=String,
@@ -72,10 +77,3 @@ SCHEMA = Schema(dict(
     year=Int16,
     unit=String
 ))
-
-TYPE_MAP = TypeMap(
-    assessment=Converter.for_built_in(str),
-    month=MonthConverter("en"),
-    year=Converter.for_built_in(int),
-    unit=Converter.for_built_in(str),
-)

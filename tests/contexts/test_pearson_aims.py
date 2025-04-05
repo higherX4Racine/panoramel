@@ -12,10 +12,10 @@ from panoramel import PearsonAimsContext
 ])
 def test_pearson_aims_context(mock_uuid, unit, datatype):
     context = PearsonAimsContext(
-        "One of the 3 'R's",
-        "k-12",
-        "Beckett",
-        unit
+        assessment="One of the 3 'R's",
+        grade="k-12",
+        season="Beckett",
+        unit=unit
     )
 
     assert context.context_id == b"1"

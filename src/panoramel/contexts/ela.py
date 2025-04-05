@@ -1,32 +1,28 @@
 #  Copyright (C) 2025 by Higher Expectations for Racine County
+from dataclasses import dataclass
 from polars import Schema, String, Binary
-from smelt_py import (Element, Pattern)
+from smelt_py.parsing import (Element, Parser, Pattern)
 from smelt_py.models import LookupContext
 
 from .utilities import schema_to_type_map
 
 
+@dataclass
 class Ela(LookupContext):
     r"""A context that describes either a raw score or a success level.
 
-        Parameters
-        ----------
-        unit: str
-            either "Status" or "Value" for an achievement level or raw score.
-        """
-    _field_names = ["unit"]
+    Parameters
+    ----------
+    unit: str
+        either "Status" or "Value" for an achievement level or raw score.
+    """
     _name_field = "unit"
     _mapping = {
         "Status": String,
         "Value": String
     }
-    def __init__(self, unit: str, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._unit = unit
+    unit: str = None
 
-    @property
-    def unit(self) -> str:
-        return self._unit
 
 PATTERN = Pattern(
     [
@@ -42,3 +38,5 @@ SCHEMA = Schema({
 })
 
 TYPE_MAP = schema_to_type_map(SCHEMA)
+
+PARSER = Parser(TYPE_MAP, PATTERN)

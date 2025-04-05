@@ -2,7 +2,7 @@
 
 import pytest
 from polars import String, Float64
-from smelt_py import Capture
+from smelt_py.parsing import Capture
 
 from panoramel import NweaMapContext
 from panoramel.contexts.nwea_map import PATTERN, TYPE_MAP
@@ -59,7 +59,7 @@ def test_problematic_nwea_map_headings(heading, mock_uuid):
                         Capture("unit", "Status"),
                         Capture("duplicated", "")]
 
-    typed_captures = TYPE_MAP.typed_captures(captures)
+    typed_captures = TYPE_MAP.convert_captures(captures)
 
     assert typed_captures == {
         "score_type": "Growth",

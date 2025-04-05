@@ -1,36 +1,39 @@
 #  Copyright (C) 2025 by Higher Expectations for Racine County
 
+from dataclasses import dataclass
 from datetime import datetime
 
 from polars import Schema, Datetime, String, Binary
 
 from smelt_py.models import LiteralContext
-from smelt_py import (
-    Converter,
-    DateTimeConverter,
+from smelt_py.parsing import (
     Element,
+    Parser,
     Pattern,
     TypeMap,
 )
+from smelt_py.parsing.converters import (
+    BuiltInConverter,
+    DateTimeConverter,
+)
 
 
+@dataclass
 class Source(LiteralContext):
-    _field_names = ["full_name", "date_stamp"]
+    r"""A Context subclass for tracking the data source of a column.
+
+    Parameters
+    ----------
+    full_name : str
+        some unique identifier for the source, like its basename if it's a file.
+    date_stamp: datetime
+        the moment in time when the source was downloaded/created/frozen
+    """
     _name_field = None
     _data_type = None
 
-    def __init__(self, full_name: str, date_stamp: datetime, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._desc = full_name
-        self._date = date_stamp
-
-    @property
-    def full_name(self) -> str:
-        return self._desc
-
-    @property
-    def date_stamp(self) -> datetime:
-        return self._date
+    full_name: str = None
+    date_stamp: datetime = None
 
 
 PATTERN = Pattern(
@@ -52,6 +55,8 @@ SCHEMA = Schema(dict(
 ))
 
 TYPE_MAP = TypeMap(
-    full_name=Converter.for_built_in(str),
+    full_name=BuiltInConverter(str),
     date_stamp=DateTimeConverter("%Y%m%d%H%M%S")
 )
+
+PARSER = Parser(TYPE_MAP, PATTERN)

@@ -1,13 +1,16 @@
 #  Copyright (C) 2025 by Higher Expectations for Racine County
 
+from dataclasses import dataclass
+
 from polars import Schema, String, Binary, Datetime, UInt64
 
 from smelt_py.models import LookupContext
-from smelt_py import (Element, Pattern)
+from smelt_py.parsing import (Element, Parser, Pattern)
 
 from panoramel.contexts.utilities import schema_to_type_map
 
 
+@dataclass
 class Student(LookupContext):
     r"""Identifying information about students.
 
@@ -17,7 +20,6 @@ class Student(LookupContext):
         which piece of information the column holds, e.g. name or gender.
     """
 
-    _field_names = ["field"]
     _name_field = "field"
     _mapping = {
         "504 Status": String,
@@ -34,13 +36,7 @@ class Student(LookupContext):
         "Student Number": UInt64
     }
 
-    def __init__(self, field: str, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._field = field
-
-    @property
-    def field(self) -> str:
-        return self._field
+    field: str = None
 
 
 PATTERN = Pattern(
@@ -70,3 +66,5 @@ SCHEMA = Schema(dict(
 ))
 
 TYPE_MAP = schema_to_type_map(SCHEMA)
+
+PARSER = Parser(TYPE_MAP, PATTERN)

@@ -15,7 +15,7 @@ from panoramel import StudentContext
     ("Student Number", UInt64)
 ])
 def test_student_context(mock_uuid, field, datatype):
-    context = StudentContext(field)
+    context = StudentContext(field=field)
 
     assert context.context_id == b"1"
     assert context.as_tuple() == (b"1", field)

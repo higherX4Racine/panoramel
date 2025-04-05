@@ -12,7 +12,7 @@ from panoramel import ForwardContext
     ("Value", Float64)
 ])
 def test_forward_context(mock_uuid, unit, datatype):
-    context = ForwardContext("some reading test", unit)
+    context = ForwardContext(subject="some reading test", unit=unit)
 
     assert context.context_id == b"1"
     assert context.as_tuple() == (b"1", "some reading test", unit)

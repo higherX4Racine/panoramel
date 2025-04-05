@@ -1,28 +1,31 @@
 #  Copyright (C) 2025 by Higher Expectations for Racine County
 
-from polars import Schema, String, Binary
-from smelt_py import (Element, Pattern)
-from .status_value_unit_lookup import StatusValueUnit
+from dataclasses import dataclass
+from polars import Schema, String, Binary, Float64
+from smelt_py.models import LookupContext
+from smelt_py.parsing import (Element, Parser, Pattern)
 from .utilities import schema_to_type_map
 
 
-class Forward(StatusValueUnit):
+@dataclass
+class Forward(LookupContext):
     r"""One specific early literacy assessment
 
     Parameters
     ----------
     subject: str
         The subject assessed by this part of the Forward exam
+    unit: str
+        either "Status" or "Value" for an achievement level or raw score.
     """
-    _field_names = ["subject"]
-
-    def __init__(self, subject: str, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._subject = subject
-
-    @property
-    def subject(self) -> str:
-        return self._subject
+    _name_field = "unit"
+    _mapping = {
+        "Most Recent Result": Float64,
+        "Status": String,
+        "Value": Float64
+    }
+    subject: str = None
+    unit: str = None
 
 
 PATTERN = Pattern(
@@ -42,3 +45,5 @@ SCHEMA = Schema(dict(
 ))
 
 TYPE_MAP = schema_to_type_map(SCHEMA)
+
+PARSER = Parser(TYPE_MAP, PATTERN)

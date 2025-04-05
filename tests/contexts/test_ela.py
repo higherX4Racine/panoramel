@@ -1,17 +1,19 @@
 #  Copyright (C) 2025 by Higher Expectations for Racine County
 
+
 import pytest
-from polars import String, Float64
+from polars import String
+
 
 from panoramel import ElaContext
-
 
 @pytest.mark.parametrize("unit,datatype", [
     ("Status", String),
     ("Value", String)
 ])
 def test_ela_context(mock_uuid, unit, datatype):
-    context = ElaContext(unit)
+
+    context = ElaContext(unit=unit)
 
     assert context.context_id == b"1"
     assert context.as_tuple() == (b'1', unit,)

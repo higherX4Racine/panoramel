@@ -1,14 +1,17 @@
 #  Copyright (C) 2025 by Higher Expectations for Racine County
 
-from polars import Schema, String, Binary
+from dataclasses import dataclass
 
-from smelt_py import (Element, Pattern)
+from polars import Schema, String, Binary, Float64
 
-from .status_value_unit_lookup import StatusValueUnit
+from smelt_py.models import LookupContext
+from smelt_py.parsing import (Element, Parser, Pattern)
+
 from .utilities import schema_to_type_map
 
 
-class PearsonAims(StatusValueUnit):
+@dataclass
+class PearsonAims(LookupContext):
     r"""Results from standardized assessments of reading for Act 20
 
     Parameters
@@ -19,33 +22,20 @@ class PearsonAims(StatusValueUnit):
         something in 4k-12
     season: str
         fall, winter, or spring
+    unit: str
+        either "Status" or "Value" for an achievement level or raw score.
     """
+    _name_field = "unit"
+    _mapping = {
+        "Most Recent Result": Float64,
+        "Status": String,
+        "Value": Float64
+    }
 
-    _field_names = ["assessment", "grade", "season"]
-
-    def __init__(self,
-                 assessment: str,
-                 grade: str,
-                 season: str,
-                 *args,
-                 **kwargs
-                 ):
-        super().__init__(*args, **kwargs)
-        self._assessment = assessment
-        self._grade = grade
-        self._season = season
-
-    @property
-    def assessment(self) -> str:
-        return self._assessment
-
-    @property
-    def grade(self) -> str:
-        return self._grade
-
-    @property
-    def season(self) -> str:
-        return self._season
+    assessment: str = None
+    grade: str = None
+    season: str = None
+    unit: str = None
 
 
 PATTERN = Pattern(
@@ -69,3 +59,5 @@ SCHEMA = Schema(dict(
 ))
 
 TYPE_MAP = schema_to_type_map(SCHEMA)
+
+PARSER = Parser(TYPE_MAP, PATTERN)

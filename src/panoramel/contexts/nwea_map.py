@@ -1,13 +1,16 @@
 #  Copyright (C) 2025 by Higher Expectations for Racine County
 
-from polars import Schema, String, Int16, Binary, Boolean
+from dataclasses import dataclass
 
-from smelt_py import (Converter, Element, Pattern, TypeMap)
+from polars import Schema, String, Int16, Binary, Boolean, Float64
 
-from .status_value_unit_lookup import StatusValueUnit
+from smelt_py.models import LookupContext
+from smelt_py.parsing import (Element, Parser, Pattern, TypeMap)
+from smelt_py.parsing.converters import Converter, BuiltInConverter
 
 
-class NweaMap(StatusValueUnit):
+@dataclass
+class NweaMap(LookupContext):
     r"""A complicated heading with information about a MAP score.
     Parameters
     ----------
@@ -25,68 +28,28 @@ class NweaMap(StatusValueUnit):
         even more specific detail than `edition`
     season: str
         fall, winter, or spring
-    duplicated: str, optional
+    duplicated: bool
         some of the columns mark the MAP score as repeated.
+    unit: str
+        either "Status" or "Value" for an achievement level or raw score.
     """
 
-    _field_names = [
-        "score_type", "subject", "grade_range",
-        "edition", "year", "version", "season",
-        "duplicated"
-    ]
+    _name_field = "unit"
+    _mapping = {
+        "Most Recent Result": Float64,
+        "Status": String,
+        "Value": Float64
+    }
 
-    def __init__(self,
-                 score_type: str,
-                 subject: str,
-                 grade_range: str,
-                 edition: str,
-                 year: int,
-                 version: str,
-                 season: str,
-                 duplicated: bool = False,
-                 *args,
-                 **kwargs):
-        super().__init__(*args, **kwargs)
-        self._score_type = score_type
-        self._subject = subject
-        self._grade_range = grade_range
-        self._edition = edition
-        self._year = year
-        self._version = version
-        self._season = season
-        self._duplicated = duplicated
-
-    @property
-    def score_type(self) -> str:
-        return self._score_type
-
-    @property
-    def subject(self) -> str:
-        return self._subject
-
-    @property
-    def grade_range(self) -> str:
-        return self._grade_range
-
-    @property
-    def edition(self) -> str:
-        return self._edition
-
-    @property
-    def year(self) -> int:
-        return self._year
-
-    @property
-    def version(self) -> str:
-        return self._version
-
-    @property
-    def season(self) -> str:
-        return self._season
-
-    @property
-    def duplicated(self) -> bool:
-        return self._duplicated
+    score_type: str = None
+    subject: str = None
+    grade_range: str = None
+    edition: str = None
+    year: int = None
+    version: str = None
+    season: str = None
+    duplicated: bool = False
+    unit: str = ""
 
 
 PATTERN = Pattern(
@@ -119,13 +82,15 @@ SCHEMA = Schema(dict(
 ))
 
 TYPE_MAP = TypeMap(
-    score_type=Converter.for_built_in(str),
-    subject=Converter.for_built_in(str),
-    grade_range=Converter.for_built_in(str),
-    edition=Converter.for_built_in(str),
-    year=Converter.for_built_in(int),
-    version=Converter.for_built_in(str),
-    season=Converter.for_built_in(str),
-    duplicated=Converter.for_built_in(bool),
-    unit=Converter.for_built_in(str),
+    score_type=BuiltInConverter(str),
+    subject=BuiltInConverter(str),
+    grade_range=BuiltInConverter(str),
+    edition=BuiltInConverter(str),
+    year=BuiltInConverter(int),
+    version=BuiltInConverter(str),
+    season=BuiltInConverter(str),
+    duplicated=BuiltInConverter(bool),
+    unit=BuiltInConverter(str),
 )
+
+PARSER = Parser(TYPE_MAP, PATTERN)
