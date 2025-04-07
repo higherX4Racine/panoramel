@@ -1,14 +1,14 @@
 #  Copyright (C) 2025 by Higher Expectations for Racine County
 
-from .contexts.el_assessment import PATTERN as EL_ASSESSMENT_PATTERN
-from .contexts.ela import PATTERN as ELA_PATTERN
-from .contexts.forward import PATTERN as FORWARD_PATTERN
-from .contexts.intervention import PATTERN as INTERVENTION_PATTERN
-from .contexts.intervention_count import PATTERN as INTERVENTION_COUNT_PATTERN
-from .contexts.nwea_map import PATTERN as NWEA_MAP_PATTERN
-from .contexts.pearson_aims import PATTERN as PEARSON_AIMS_PATTERN
-from .contexts.source import PATTERN as SOURCE_PATTERN
-from .contexts.student import PATTERN as STUDENT_PATTERN
+from panoramel.el_assessment import PATTERN as EL_ASSESSMENT_PATTERN
+from panoramel.ela import PATTERN as ELA_PATTERN
+from panoramel.forward import PATTERN as FORWARD_PATTERN
+from panoramel.intervention import PATTERN as INTERVENTION_PATTERN
+from panoramel.intervention_count import PATTERN as INTERVENTION_COUNT_PATTERN
+from panoramel.nwea_map import PATTERN as NWEA_MAP_PATTERN
+from panoramel.pearson_aims import PATTERN as PEARSON_AIMS_PATTERN
+from panoramel.source import PATTERN as SOURCE_PATTERN
+from panoramel.student import PATTERN as STUDENT_PATTERN
 
 PANORAMA_PATTERNS = {
     "el_assessment": EL_ASSESSMENT_PATTERN,

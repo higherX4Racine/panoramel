@@ -2,10 +2,8 @@
 
 import pytest
 from polars import String, Float64
-from smelt_py.parsing import Capture
 
 from panoramel import NweaMapContext
-from panoramel.contexts.nwea_map import PATTERN, TYPE_MAP
 
 
 @pytest.mark.parametrize("unit,datatype", [
@@ -47,19 +45,9 @@ def test_nwea_map_context(mock_uuid, unit, datatype):
     "NWEA MAP Growth: Spanish Reading 2-5 CCSS 2012 V2 Spring Status",
 ])
 def test_problematic_nwea_map_headings(heading, mock_uuid):
-    captures = PATTERN.extract(heading)
+    parser = NweaMapContext.make_parser()
 
-    assert captures == [Capture("score_type", "Growth"),
-                        Capture("subject", "Spanish Reading"),
-                        Capture("grade_range", "2-5"),
-                        Capture("edition", "CCSS"),
-                        Capture("year", "2012"),
-                        Capture("version", "V2"),
-                        Capture("season", "Spring"),
-                        Capture("unit", "Status"),
-                        Capture("duplicated", "")]
-
-    typed_captures = TYPE_MAP.convert_captures(captures)
+    typed_captures = parser.parse(heading)
 
     assert typed_captures == {
         "score_type": "Growth",
@@ -91,12 +79,13 @@ def test_problematic_nwea_map_headings(heading, mock_uuid):
 
 
 def test_nwea_map_type_map():
-    assert TYPE_MAP.type("score_type") == str
-    assert TYPE_MAP.type("subject") == str
-    assert TYPE_MAP.type("grade_range") == str
-    assert TYPE_MAP.type("edition") == str
-    assert TYPE_MAP.type("year") == int
-    assert TYPE_MAP.type("version") == str
-    assert TYPE_MAP.type("season") == str
-    assert TYPE_MAP.type("duplicated") == bool
-    assert TYPE_MAP.type("unit") == str
+    type_map = NweaMapContext.type_map()
+    assert type_map["score_type"].type == str
+    assert type_map["subject"].type == str
+    assert type_map["grade_range"].type == str
+    assert type_map["edition"].type == str
+    assert type_map["year"].type == int
+    assert type_map["version"].type == str
+    assert type_map["season"].type == str
+    assert type_map["duplicated"].type == bool
+    assert type_map["unit"].type == str

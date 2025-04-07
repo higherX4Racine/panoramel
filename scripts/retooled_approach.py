@@ -5,7 +5,6 @@ from glob import glob
 # from json import load as json_load
 import os
 import re
-from typing import Any
 
 from polars import (
     col,
@@ -28,15 +27,11 @@ from polars import (
 from polars.exceptions import ComputeError
 
 from panoramel import (
-    PANORAMA_CONTEXTS,
-    PANORAMA_PATTERNS,
-    PANORAMA_SCHEMAS,
-    PANORAMA_TYPE_MAPS
+    PANORAMA_CONTEXTS
 )
 from xlsxwriter import Workbook
 
-from smelt_py.models import Context, Column
-from smelt_py.polars import as_filter_expressions, as_row
+from smelt_py.polars import ColumnFramer, ContextFramer, MeasureFramer, ModelFramer
 
 DATA_DIR = os.path.join(os.path.expanduser("~"),
                         "Documents",
@@ -53,35 +48,8 @@ PANORAMA_DOWNLOAD_DIR = os.path.join(DATA_DIR,
 INPUT_FILES = glob(os.path.join(PANORAMA_DOWNLOAD_DIR, "*.csv"))
 OUTPUT_DIR = os.path.join(DATA_DIR, "Iterations", "Panoramel")
 
-
-def find_or_append(context_label: str,
-                   context_frame: DataFrame,
-                   typed_captures: dict[str, Any],
-                   fields: list[str] = None) -> Context:
-    expr = as_filter_expressions(typed_captures, fields)
-    row_frame = context_frame.filter(*expr)
-    if row_frame.height > 0:
-        typed_captures = row_frame.row(0, named=True)
-    context = PANORAMA_CONTEXTS[context_label](**typed_captures)
-    if row_frame.height == 0:
-        row_frame = as_row(context, context_frame)
-        context_frame.vstack(row_frame, in_place=True)
-    return context
-
-
-def parse(text: str, context_label: str) -> dict[str, Any] | None:
-    captures = PANORAMA_PATTERNS[context_label].extract(text)
-    if captures:
-        return PANORAMA_TYPE_MAPS[context_label].convert_captures(captures)
-    return None
-
-
 MEASURE_FRAMES = {
-    data_type: DataFrame(schema={
-        'column_id': Binary,
-        'row': UInt32,
-        'value': data_type
-    }) for data_type in [
+    data_type: MeasureFramer(data_type) for data_type in [
         Binary,
         Datetime(),
         Float64,
@@ -93,22 +61,20 @@ MEASURE_FRAMES = {
     ]
 }
 
-COLUMN_FRAME = DataFrame(schema={
-    'source_id': Binary,
-    'index': Int64,
-    'context_type': String,
-    'context_id': Binary,
-    'measure_type': Object
-})
+COLUMN_FRAMER = ColumnFramer()
 
 HEADING_KEYS = (
     {"source"}
-    .symmetric_difference(PANORAMA_PATTERNS.keys())
+    .symmetric_difference(PANORAMA_CONTEXTS.keys())
 )
 
-CONTEXT_FRAMES = {
-    k: DataFrame(schema=schema)
-    for k, schema in PANORAMA_SCHEMAS.items()
+CONTEXT_FRAMERS = {
+    k: ContextFramer(context, context.build_schema())
+    for k, context in PANORAMA_CONTEXTS.items()
+}
+
+CONTEXT_PARSERS = {
+    k: context.make_parser() for k, context in PANORAMA_CONTEXTS
 }
 
 # with files("panoramel").joinpath("data", "schools.json").open() as fh:
@@ -122,23 +88,17 @@ CONTEXT_FRAMES = {
 #         )
 
 for fn in INPUT_FILES:
-    source_context = find_or_append("source",
-                                    CONTEXT_FRAMES["source"],
-                                    parse(os.path.basename(fn), "source"))
+    CONTEXT_FRAMERS["source"].find_or_append(
+        CONTEXT_PARSERS["source"].parse(os.path.basename(fn))
+    )
     column_names = scan_csv(fn).collect_schema().names()
     columns = []
     for col_index, col_name in enumerate(column_names):
         for heading_key in HEADING_KEYS:
-            heading_captures = parse(col_name, heading_key)
+            heading_captures = CONTEXT_PARSERS[heading_key].parse(col_name)
             if heading_captures is not None:
-                heading_context = find_or_append(heading_key,
-                                                 CONTEXT_FRAMES[heading_key],
-                                                 heading_captures)
-                column = Column(source_context.context_id, col_index,
-                                heading_key, heading_context.context_id,
-                                heading_context.output_type)
+                column = CONTEXT_FRAMERS[heading_key].find_or_append(heading_captures)
                 columns.append(column)
-                COLUMN_FRAME.vstack(as_row(column, COLUMN_FRAME), in_place=True)
 
     schema = {c.column_id.hex(): c.measure_type for c in columns}
     del columns
@@ -153,8 +113,8 @@ for fn in INPUT_FILES:
     except ComputeError as c_e:
         print(fn)
         raise c_e
-    for data_type, data_frame in MEASURE_FRAMES.items():
-        data_frame.vstack(
+    for data_type, framer in MEASURE_FRAMES.items():
+        framer.frame.vstack(
             local
             .select(cs.by_name("row") | cs.by_dtype(data_type))
             .unpivot(index="row", variable_name="column_id", value_name="value")
@@ -171,24 +131,24 @@ def bowdlerize_key(key: str) -> str:
     return key
 
 
-def sanitize_blobs(_frame: DataFrame) -> DataFrame:
-    return _frame.with_columns(
-        col(Object).map_elements(repr, return_dtype=String),
-        col(Binary).bin.encode("hex")
+def save_frame_as_sheet(_wb: Workbook, _label: str, _framer: ModelFramer) -> None:
+    (framer
+    .sanitize_blobs()
+    .drop_nulls(
+        "value"
     )
-
-
-def save_frame_as_sheet(_wb: Workbook, _label: str, _frame: DataFrame) -> None:
-    sanitize_blobs(_frame).write_excel(_wb,
-                                       _wb.add_worksheet(_label))
+    .write_excel(
+        _wb,
+        _wb.add_worksheet(_label)
+    ))
 
 
 with Workbook(os.path.join(OUTPUT_DIR, "findings.xlsx")) as wb:
-    for label, frame in CONTEXT_FRAMES.items():
-        save_frame_as_sheet(wb, bowdlerize_key(label), frame)
-    save_frame_as_sheet(wb, "columns", COLUMN_FRAME)
-    for data_type, data_frame in MEASURE_FRAMES.items():
-        if data_frame.height > 0:
+    for label, framer in CONTEXT_FRAMERS.items():
+        save_frame_as_sheet(wb, bowdlerize_key(label), framer)
+    save_frame_as_sheet(wb, "columns", COLUMN_FRAMER)
+    for data_type, data_framer in MEASURE_FRAMES.items():
+        if data_framer.frame.height > 0:
             save_frame_as_sheet(wb,
                                 f"{bowdlerize_key(repr(data_type))}_measures",
-                                data_frame.drop_nulls("value"))
+                                data_framer)

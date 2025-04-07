@@ -3,29 +3,26 @@
 from dataclasses import dataclass
 
 from polars import (
-    Binary,
-    Int8,
+    # Int8,
     Int16,
     Float64,
     Schema,
     String,
 )
 
-from smelt_py.models import LookupContext
+from smelt_py.models import LookupOutput
 from smelt_py.parsing import (
     Element,
-    Parser,
-    Pattern,
-    TypeMap,
 )
-from smelt_py.parsing.converters import (
-    BuiltInConverter,
-    MonthConverter,
-)
+# from smelt_py.parsing.converters import (
+#     BuiltInConverter,
+#     MonthConverter,
+# )
+from .context import PanoramelContext
 
 
 @dataclass
-class ElAssessment(LookupContext):
+class ElAssessment(LookupOutput, PanoramelContext):
     r"""One specific early literacy assessment
 
     Parameters
@@ -50,30 +47,20 @@ class ElAssessment(LookupContext):
     year: int = None
     unit: str = None
 
+    @classmethod
+    def elements(cls) -> list[Element]:
+        return [
+            Element(name="assessment", pattern=r".+"),
+            Element(name="month", pattern=r"\b\w+\b"),
+            Element(name="year", pattern=r"\b\d+\b"),
+            Element(name="unit", pattern=r"Status|Value")
+        ]
 
-PATTERN = Pattern(
-    [
-        Element(name="assessment", pattern=r".+"),
-        Element(name="month", pattern=r"\b\w+\b"),
-        Element(name="year", pattern=r"\b\d+\b"),
-        Element(name="unit", pattern=r"Status|Value")
-    ],
-    r"[\s:]"
-)
-
-TYPE_MAP = TypeMap(
-    assessment=BuiltInConverter(str),
-    month=MonthConverter("en"),
-    year=BuiltInConverter(int),
-    unit=BuiltInConverter(str),
-)
-
-PARSER = Parser(TYPE_MAP, PATTERN)
-
-SCHEMA = Schema(dict(
-    context_id=Binary,
-    assessment=String,
-    month=Int8,
-    year=Int16,
-    unit=String
-))
+    @classmethod
+    def build_schema(cls, **kwargs) -> Schema:
+        return super().build_schema(
+            assessment=String,
+            month=String,  # Int8,
+            year=Int16,
+            unit=String
+        )

@@ -4,7 +4,7 @@ from datetime import datetime
 
 import pytest
 
-from panoramel import SourceContext, PANORAMA_PATTERNS, PANORAMA_TYPE_MAPS
+from panoramel import SourceContext
 
 SOURCE_NAMES = [
     "FrattElementary_students_ELA_YTD_20250211085843.csv",
@@ -64,14 +64,10 @@ TIME_STAMPS = [
 @pytest.mark.parametrize("text,school,timestamp",
                          zip(SOURCE_NAMES, SCHOOL_NAMES, TIME_STAMPS))
 def test_source_context(text, school, timestamp):
-    captures = PANORAMA_PATTERNS["source"].extract(text)
-    assert captures[0].value == school
-    timestring = ''.join(f'{x:02}' for x in timestamp)
-    assert captures[1].value == "20250211" + timestring
-    context = SourceContext(
-        context_id=b"1",
-        **PANORAMA_TYPE_MAPS["source"].convert_captures(captures),
-    )
+    parser = SourceContext.make_parser()
+    typed_captures = parser.parse(text)
+    assert typed_captures is not None
+    context = SourceContext(**typed_captures)
     assert context.full_name == school
     assert context.date_stamp == datetime(2025, 2, 11, *timestamp)
     assert context.output_name is None

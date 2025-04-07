@@ -14,9 +14,9 @@ with (files("panoramel").joinpath("data", "schools.json").open()) as fh:
 
 @pytest.mark.parametrize("school", SCHOOL_TUPLES)
 def test_school_context(school):
-    context = SchoolContext(b"1", *school)
+    context = SchoolContext(b"1", full_name=school[0])
 
     assert context.context_id == b"1"
-    assert context.as_tuple() == (b"1", school[0], school[1])
+    assert context.as_tuple() == (b"1", school[0])
     assert context.output_name == "School"
     assert context.output_type == String

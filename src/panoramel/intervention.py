@@ -2,16 +2,16 @@
 
 from dataclasses import dataclass
 
-from polars import Schema, Int8, String, Binary, Datetime
+from polars import Schema, Int8, String
 
-from smelt_py.models import LookupContext
-from smelt_py.parsing import (Element, Parser, Pattern)
+from smelt_py.models import LookupOutput
+from smelt_py.parsing import Element
 
-from panoramel.contexts.utilities import schema_to_type_map
+from .context import PanoramelContext
 
 
 @dataclass
-class Intervention(LookupContext):
+class Intervention(LookupOutput, PanoramelContext):
     r"""Details about a learning intervention to help a kid get up to standard.
 
     Parameters
@@ -34,22 +34,17 @@ class Intervention(LookupContext):
     number: int = None
     detail: str = None
 
+    @classmethod
+    def elements(cls) -> list[Element]:
+        return [
+            Element(pattern=r"Intervention"),
+            Element(name="number", pattern=r"\d+"),
+            Element(name="detail", pattern=r".+")
+        ]
 
-PATTERN = Pattern(
-    [
-        Element(pattern=r"Intervention"),
-        Element(name="number", pattern=r"\d+"),
-        Element(name="detail", pattern=r".+")
-    ],
-    separator=r"[\s:]"
-)
-
-SCHEMA = Schema(dict(
-    context_id=Binary,
-    number=Int8,
-    detail=String
-))
-
-TYPE_MAP = schema_to_type_map(SCHEMA)
-
-PARSER = Parser(TYPE_MAP, PATTERN)
+    @classmethod
+    def build_schema(cls, **kwargs) -> Schema:
+        return super().build_schema(
+            number=Int8,
+            detail=String
+        )
