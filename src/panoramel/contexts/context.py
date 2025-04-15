@@ -17,11 +17,6 @@ class PanoramelContext(Context):
         raise NotImplementedError
 
     @classmethod
-    def make_parser(cls) -> Parser:
-        r"""Call Context.build_parser with the class's elements"""
-        return super().build_parser(cls.elements(), cls.separator)
-
-    @classmethod
     def build_schema(cls, **kwargs) -> Schema:
         r"""create a schema that starts with 'context_id': Binary"""
         return Schema(dict(context_id=Binary) | kwargs)

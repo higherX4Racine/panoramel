@@ -26,6 +26,7 @@ class Student(LookupOutput, PanoramelContext):
     _mapping: ClassVar[dict[str, DataTypeClass]] = {
         "504 Status": String,
         "Date of Birth": Datetime(),
+        "Dual Language": String,
         "ELL Status": String,
         "First Name": String,
         "Fit Status": String,

@@ -3,7 +3,7 @@
 import pytest
 from polars import String, Float64
 
-from panoramel import PearsonAimsContext
+from panoramel.contexts import PearsonAimsContext
 
 
 @pytest.mark.parametrize("unit,datatype", [

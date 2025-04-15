@@ -3,7 +3,7 @@
 import pytest
 
 from polars import Binary, Int16
-from panoramel.context import PanoramelContext
+from panoramel.contexts.context import PanoramelContext
 
 
 def test_abstractness_of_panoramel_context():
@@ -11,7 +11,8 @@ def test_abstractness_of_panoramel_context():
         _ = PanoramelContext.elements()
 
     with pytest.raises(NotImplementedError):
-        _ = PanoramelContext.make_parser()
+        _ = PanoramelContext.build_parser(PanoramelContext.elements(),
+                                          PanoramelContext.separator)
 
 
 def test_schema_building():

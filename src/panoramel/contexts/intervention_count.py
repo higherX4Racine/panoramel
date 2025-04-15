@@ -22,7 +22,7 @@ class InterventionCount(LiteralOutput, PanoramelContext):
     _name_field = "Number of Interventions"
     _data_type = Int8
 
-    interventions: int = None
+    interventions: str = None
 
     @classmethod
     def elements(cls) -> list[Element]:

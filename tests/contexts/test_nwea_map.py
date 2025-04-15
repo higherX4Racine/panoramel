@@ -3,7 +3,7 @@
 import pytest
 from polars import String, Float64
 
-from panoramel import NweaMapContext
+from panoramel.contexts import NweaMapContext
 
 
 @pytest.mark.parametrize("unit,datatype", [
@@ -45,7 +45,8 @@ def test_nwea_map_context(mock_uuid, unit, datatype):
     "NWEA MAP Growth: Spanish Reading 2-5 CCSS 2012 V2 Spring Status",
 ])
 def test_problematic_nwea_map_headings(heading, mock_uuid):
-    parser = NweaMapContext.make_parser()
+    parser = NweaMapContext.build_parser(NweaMapContext.elements(),
+                                         NweaMapContext.separator)
 
     typed_captures = parser.parse(heading)
 

@@ -3,9 +3,9 @@
 from datetime import date
 
 import pytest
-from polars import String, Datetime
+from polars import String
 
-from panoramel import InterventionContext
+from panoramel.contexts import InterventionContext
 
 
 @pytest.mark.parametrize("detail,datatype", [

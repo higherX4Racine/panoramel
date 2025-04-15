@@ -4,7 +4,7 @@ from datetime import datetime
 
 import pytest
 
-from panoramel import SourceContext
+from panoramel.contexts import SourceContext
 
 SOURCE_NAMES = [
     "FrattElementary_students_ELA_YTD_20250211085843.csv",
@@ -64,7 +64,8 @@ TIME_STAMPS = [
 @pytest.mark.parametrize("text,school,timestamp",
                          zip(SOURCE_NAMES, SCHOOL_NAMES, TIME_STAMPS))
 def test_source_context(text, school, timestamp):
-    parser = SourceContext.make_parser()
+    parser = SourceContext.build_parser(SourceContext.elements(),
+                                        SourceContext.separator)
     typed_captures = parser.parse(text)
     assert typed_captures is not None
     context = SourceContext(**typed_captures)

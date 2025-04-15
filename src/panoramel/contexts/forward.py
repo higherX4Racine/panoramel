@@ -22,8 +22,7 @@ class Forward(LookupOutput, PanoramelContext):
     _name_field = "unit"
     _mapping = {
         "Most Recent Result": Float64,
-        "Status": String,
-        "Value": Float64
+        "Status": String
     }
     subject: str = None
     unit: str = None

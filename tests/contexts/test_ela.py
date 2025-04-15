@@ -5,7 +5,7 @@ import pytest
 from polars import String
 
 
-from panoramel import ElaContext
+from panoramel.contexts import ElaContext
 
 @pytest.mark.parametrize("unit,datatype", [
     ("Status", String),

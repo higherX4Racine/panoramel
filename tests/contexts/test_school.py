@@ -6,7 +6,7 @@ from json import load as json_load
 import pytest
 from polars import String
 
-from panoramel import SchoolContext
+from panoramel.contexts import SchoolContext
 
 with (files("panoramel").joinpath("data", "schools.json").open()) as fh:
     SCHOOL_TUPLES = json_load(fh)

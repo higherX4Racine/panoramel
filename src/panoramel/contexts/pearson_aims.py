@@ -27,7 +27,6 @@ class PearsonAims(LookupOutput, PanoramelContext):
     """
     _name_field = "unit"
     _mapping = {
-        "Most Recent Result": Float64,
         "Status": String,
         "Value": Float64
     }

@@ -3,7 +3,7 @@
 import pytest
 from polars import Datetime, String, UInt64
 
-from panoramel import StudentContext
+from panoramel.contexts import StudentContext
 
 
 @pytest.mark.parametrize("field,datatype", [

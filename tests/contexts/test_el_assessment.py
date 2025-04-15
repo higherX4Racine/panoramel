@@ -2,7 +2,7 @@
 
 import pytest
 from polars import String, Float64
-from panoramel.el_assessment import ElAssessment
+from panoramel.contexts.el_assessment import ElAssessment
 
 
 @pytest.mark.parametrize("unit,datatype", [
